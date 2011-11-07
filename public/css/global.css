@@ -1,0 +1,26 @@
+@CHARSET "UTF-8";
+
+#logo {
+	background: url(/img/logo.png) no-repeat;
+	text-indent: -999em;
+	height: 123px;
+}
+
+#menu a {
+  	width : 150px;
+  	display: block;
+  	float: left;
+}
+
+#menu a.active, #menu a:hover {
+	font-weight: bold;
+}
+
+.list thead td {
+	background: white url(img/grid_headerbg.gif) repeat-x 0px 100%;
+	border-width: 0px 0px 1px 1px;
+	color: black;
+	font-size: 0,9em;
+	font-weight: bold;
+	padding: 5px 2px 4px 5px;
+}

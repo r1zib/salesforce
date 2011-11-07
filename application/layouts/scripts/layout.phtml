@@ -1,0 +1,40 @@
+<!-- application/layouts/scripts/layout.phtml -->
+<?php echo $this->doctype() ?>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <title>SalesForce</title>
+  
+  <!-- Framework CSS -->
+  <?php echo $this->headLink()->appendStylesheet('/css/screen.css','screen, projection'); ?>
+  <?php echo $this->headLink()->appendStylesheet('/css/print.css','print'); ?>
+  <!--[if lt IE 8]><?php echo $this->headLink()->appendStylesheet('/css/print.css','print'); ?><![endif]-->
+  <?php echo $this->headLink()->appendStylesheet('/css/global.css') ?>
+
+</head>
+<body>
+ <div class="container">
+<div id="header">
+    <div id="logo">
+        Azeliz & SalesForce
+    </div>
+    <hr/>
+    <div id="menu"  class= "last">
+        <a href="<?php echo $this->url(
+            array('controller'=>'products'),
+            'default',
+            true) ?>">Produits</a>
+        <a href="<?php echo $this->url(
+            array('controller'=>'opportunities'),
+            'default',
+            true) ?>">Packs</a>
+            
+    </div>
+    <hr/>
+</div>
+
+ 
+<?php echo $this->layout()->content ?>
+ 
+</body>
+</html>

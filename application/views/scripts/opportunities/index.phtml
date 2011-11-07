@@ -1,0 +1,32 @@
+<div id="view-content" class= "list">
+
+<table> 
+	<thead>
+	<tr>
+		<td>Action</td>
+	<?php foreach ($this->entries['cols'] as $col) : 	?>
+		<td><?php echo $col; ?></td>
+	<?php endforeach; ?>
+	</tr>
+	</thead>
+	
+	<?php foreach ($this->entries['opportunities'] as $element) : ?>
+	<tr>
+		<td><a href="<?php 
+	echo $this->url(array('controller'=>'opportunities',
+                              'action'=>'edit', 
+                              'id'=>$element['Id']));?>">Détail</a></td>
+
+		<?php foreach ($this->entries['cols'] as $col) : ?>
+		<td><?php
+		if (isset($element[$col])) {
+			if (is_array($element[$col])) echo implode(',', $element[$col]);
+			else echo $element[$col];
+		}
+		?></td>
+				
+		<?php endforeach;?>
+	</tr>
+	<?php endforeach;?>
+</table>
+</div>
