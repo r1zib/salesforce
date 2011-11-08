@@ -11,7 +11,10 @@ class OutilPdfTest extends PHPUnit_Framework_TestCase
     public function testPdf()
     {
     	
-    	$rep_doc = __DIR__.'/../../../docs/';
+    	$rep_doc = Zend_Registry::get('config')->livedocx->repertoire;
+    	$user = Zend_Registry::get('config')->livedocx->user;
+    	$password = Zend_Registry::get('config')->livedocx->password;;
+    	
     	$file_doc = $rep_doc.'pack.doc';
     	$file_pdf = $rep_doc.'pack.pdf';
     	echo $file_doc;
@@ -20,8 +23,8 @@ class OutilPdfTest extends PHPUnit_Framework_TestCase
     	
     	$mailMerge->setUsername('erwand')
     		->setPassword('online1ld');
-    		
-    		$mailMerge->setLocalTemplate($file_doc);
+    	
+    	$mailMerge->setLocalTemplate($file_doc);
     	
     	$mailMerge->assign('pack_nom', "Performer >45’")
     		->assign('pack_intro', 'nke propose toute une gamme de capteurs et de configurations spécifiquement adaptés à la course ou à la croisière.
@@ -44,11 +47,86 @@ performance en toute sécurité.')
     	$document = $mailMerge->retrieveDocument('pdf');
     	
     	file_put_contents($file_pdf, $document);
+    }
+    
+    function testPdfsuite () {
+    	$rep_doc = Zend_Registry::get('config')->livedocx->repertoire;
+    	$template = $rep_doc.'test1-template.doc';
+    	$file_pdf = $rep_doc.'test.pdf';
     	
+    	$user = Zend_Registry::get('config')->livedocx->user;
+    	$password = Zend_Registry::get('config')->livedocx->password;;
+    	 
+    	$code = 0; 
+    	$id = "006U0000002uQNcIAM";
     	
+    	try {
+    		
+    	$mailMerge = new Zend_Service_LiveDocx_MailMerge();
+    	$mailMerge->setUsername($user)
+    		->setPassword($password);
+    	$code = 1;
+    	$mailMerge->setLocalTemplate($template);
     	
+    	echo 'test';
+    	$code = 2;
+    	$mailMerge->assign('Ammount', 50000);
+    	$mailMerge->assign('opportunities_name', 'University of AZ Portable Generators');
+    	
+    	$code = 3;
+    	$mailMerge->createDocument();
+    	$code = 4;
+    	$document = $mailMerge->retrieveDocument('pdf');
+    	$code = 5;
+    	
+    	file_put_contents($file_pdf, $document);
+    	  	
+    	} catch (Exception $e) {
+    		$msg = '['.$code.']'. $e->getCode() . $e->getMessage();
+    		switch ($code) {
+    			case 0 : 
+    				$msg = "Vérifier le profil pour accéder à livedocx.com ".
+    				       "User name : ".$user."/n
+    				       Password : ".$password . " /n".
+    				       $e->getCode() . $e->getMessage();
+    				
+    				break;
+   				case 1 :
+   					$msg = "Vérifier le tempate ".
+   				   	       "template : ".$template."/n".
+  							$e->getCode() . $e->getMessage();
+   				
+  					break;
+				case 3 :
+					$msg = "Problème dans la création du document : /n".
+					$e->getCode() . $e->getMessage();
+				
+ 					break;
+  							
+    				
+    		}
+    		$msg = '['.$code.'] '.$msg;
+    		echo $msg;
+    		
+    		
+    	} 
     	
     }
+    
+    function testPdfsuite2 () {
+    	
+    	echo 'Test création :' . Zend_Registry::get('config')->livedocx->template;
+    	$oppor = new Application_Model_Opportunities();
+    	$oppor->createpdf("006U0000002KGHKIA4");
+    	echo 'Test création 2 :' . Zend_Registry::get('config')->livedocx->template;
+    	$oppor = new Application_Model_Opportunities();
+    	$oppor->createpdf("006U0000002uQNwIAM");
+    	
+    	
+    }	 
+    
+    
+    
 
 
 }

@@ -19,7 +19,7 @@ class Application_Model_Opportunities
 			$password = Zend_Registry::get('config')->livedocx->password;
 			
 	
-			$mailMerge = new Zend_Service_LiveDocx_MailMerge();
+			$mailMerge = new Application_Model_LiveDocs();
 			$mailMerge->setUsername($user)
 			->setPassword($password);
 			
@@ -40,25 +40,33 @@ class Application_Model_Opportunities
 			
 			/* Information sur l'opportunitée */
 			$mailMerge->assign('opportunities_name', @$info['opportunity']['Name']);
-			$mailMerge->assign('opportunities_description', @$info['opportunity']['Description']);
-			$mailMerge->assign('opportunities_amount', @$info['opportunity']['Amount']);
-			/* Calcul avec TVA */
-			$prix = round(intval(@$info['opportunity']['Amount']) *1.196,2) ;
-			$mailMerge->assign('opportunities_amount_ttc', $prix);
 			
-			
-			$products = array();
-			
-			foreach ($info['products'] as $product ) {
-				$elt = array();
-				$elt['product_quantity'] = @$product['Quantity'];
-				$elt['product_code'] = @$product['ProductCode'];
-				$elt['product_name'] = @$product['Name'];
-				$elt['product_unitprice'] = @$product['UnitPrice'];
-				$products[] = $elt;
+			if (isset($info['opportunity']['Description'])) {
+				$mailMerge->assign('opportunities_description', @$info['opportunity']['Description']);
 			}
 			
-			$mailMerge->assign('product', $products);
+			if (isset($info['opportunity']['Amount'])) {
+				$mailMerge->assign('opportunities_amount', @$info['opportunity']['Amount']);
+				/* Calcul avec TVA */
+				$prix = round(intval(@$info['opportunity']['Amount']) *1.196,2) ;
+				$mailMerge->assign('opportunities_amount_ttc', $prix);
+			}
+			
+			
+			if (count($info['products']) > 0) {
+				$products = array();
+				foreach ($info['products'] as $product ) {
+					$elt = array();
+					$elt['product_quantity'] = @$product['Quantity'];
+					$elt['product_code'] = @$product['ProductCode'];
+					$elt['product_name'] = @$product['Name'];
+					$elt['product_unitprice'] = @$product['UnitPrice'];
+					$products[] = $elt;
+				}
+				$mailMerge->assign('product', $products);
+				
+			}
+			
 			
 			$mailMerge->createDocument();
 			$document = $mailMerge->retrieveDocument('pdf');
@@ -76,7 +84,7 @@ class Application_Model_Opportunities
 		} catch (Exception $e) {
 		    
 			echo '<h1>Exception : ' .$e->getMessage().'</h1>';
-			Zend_Debug::dump($e);
+			//Zend_Debug::dump($e);
 		}
 			
 		}
@@ -93,7 +101,6 @@ class Application_Model_Opportunities
 			
             $vue['opportunity'] = $result['opportunities'][0];
                 
-			echo 'lstCol '.$lstCol;	
 			/* On compléte avec le liste des produits */
 			$sales = Application_Model_SalesforceConnect::getInstance();
 				
@@ -134,19 +141,21 @@ class Application_Model_Opportunities
 		}
 		
 		
-		$file = file_get_contents($url);
 		
-		if ($file === false) {
-			echo 'PB dans la lecture de'.$url."\n";
-		
-		} else {
-			$out = __DIR__.$pathFile;
-			if (file_put_contents($out,$file) === false) {
-				echo 'PB dans l\'écriture de '.$out."\n";
+		function telecharge ($url) {
+			$file = file_get_contents($url);
+			
+			if ($file === false) {
+				echo 'PB dans la lecture de'.$url."\n";
+			
 			} else {
-				echo "Telecharger dans : ".$out."\n";
+				$out = __DIR__.$pathFile;
+				if (file_put_contents($out,$file) === false) {
+					echo 'PB dans l\'écriture de '.$out."\n";
+				} else {
+					echo "Telecharger dans : ".$out."\n";
+				}
 			}
-		}
 		}		
 		
 		/*
