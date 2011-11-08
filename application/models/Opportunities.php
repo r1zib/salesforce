@@ -29,12 +29,7 @@ class Application_Model_Opportunities
 			
 			if (isset($info['opportunity']['image__c'])) {
 				$url = $info['opportunity']['image__c'];
-				/* TODO Retailler l'image */
-				$url = APPLICATION_PATH ."/../public/img/98-60-250.png";
-				if (!$mailMerge->imageExists($url)) {
-  					$mailMerge->uploadImage($url);
-				}
-				$mailMerge->assign('image:photo','98-60-250.png');
+				$mailMerge->assignImage($url,'image:photo' );
 			}
 			
 			
@@ -141,24 +136,7 @@ class Application_Model_Opportunities
 		}
 		
 		
-		
-		function telecharge ($url) {
-			$file = file_get_contents($url);
-			
-			if ($file === false) {
-				echo 'PB dans la lecture de'.$url."\n";
-			
-			} else {
-				$out = __DIR__.$pathFile;
-				if (file_put_contents($out,$file) === false) {
-					echo 'PB dans l\'écriture de '.$out."\n";
-				} else {
-					echo "Telecharger dans : ".$out."\n";
-				}
-			}
-		}		
-		
-		/*
+	/*
 		 * Recherche la liste des Opportunities
 		 * @param string lstCol liste des champs 
 		 * @param string where Condition dans la recherche
