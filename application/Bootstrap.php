@@ -14,8 +14,13 @@ class Bootstrap extends Zend_Application_Bootstrap_Bootstrap
 	{
 	    $config = new Zend_Config($this->getOptions(), true);
 	    Zend_Registry::set('config', $config);
+	    // TODO faut-il utiliser les sessions ou les registres ?
+	    $configSession = new Zend_Config_Ini(__dir__.'/configs/session.ini', APPLICATION_ENV);
+	    Zend_Session::setOptions($configSession->toArray());
+	     
 	    return $config;
 	}
+	
 
 }
 

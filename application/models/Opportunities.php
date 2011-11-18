@@ -3,6 +3,7 @@ require_once 'ProductSalesforce.php';
 
 class Application_Model_Opportunities
 {
+	
 		function __construct() {
 		}
 		
@@ -11,6 +12,7 @@ class Application_Model_Opportunities
 		 */
 		function createpdf ($id) {
 		try {
+			
 			$template = Zend_Registry::get('config')->livedocx->template;
 			$repertoire = Zend_Registry::get('config')->livedocx->repertoire;
 			$web       = Zend_Registry::get('config')->livedocx->web;
@@ -84,12 +86,78 @@ class Application_Model_Opportunities
 			
 		}
 		/*
+		* cas particulier du modèle nke
+		* @param $inso array tableau des informations de salesforces
+		* @param Zend_Service_LiveDocx_MailMerge le service pour créer le pdf
+		*/
+		function optionnke ($info,Zend_Service_LiveDocx_MailMerge $mailMerge) {
+					
+
+		/* la liste des produits ont une destination  :
+		 * art1 std 10
+		 * art2 std 10 : dans le block Standard : prix = sommme des produits = 20 
+		 * art3 opt1 100 
+		 * art4 opt1 100 : dans le block option1 : prix = block std + block opt1 = 20 + 200
+		 * ....
+		 * 
+		 */					
+		if (count($info['products']) > 0) {
+			$produits = array();
+			$montant = array();
+			foreach ($info['products'] as $product ) {
+				$elt = array();
+				
+				$opt = 'std';
+				if (isset($product['option__c'])) {
+					$opt = $product['option__c'];
+				}	
+				
+				/* Montant des différents blocks */
+				if (!isset($montant[$opt])) {
+					$montant[$opt] = 0;
+				}
+				// TODO faire test si la zone n'est pas renseigné dans salesforces
+				$produits[$opt] = $product;
+
+				$montant[$opt] += $product['UnitPrice'] * $product['Quantity'];
+				
+			}
+			Zend_Debug::dump($produits);			
+			foreach($produits as $cle=>$val) {
+
+				$mailMerge->assign('product_'.$cle, $val);
+			}
+			$mt_std = 0;
+			/* calcul des prix : */
+			if (isset($montant['std'])) {
+				$mt_std = $montant['std'];
+				$mailMerge->assign('product_amount_std', $mt_std);
+			}
+			foreach($montant as $cle=>$val) {
+				$mt = 0;
+				if (isset($montant[$cle])) {
+					$mt = $montant[$cle];
+				}
+				$mt += $mt_std;
+				$mailMerge->assign('product_amount_'.$cle, $mt_std);
+			}
+				
+			
+					
+		}
+			
+		}		
+		/*
 		* Recherche des information d'une Opportunitée
 		* @param string id 
-		* @param string lstCol liste des champs
+		* @param string lstCol liste des champs 
 		* @return un tableau de la liste des enregistrements
 		*/
-		function find ($id, $lstCol='Id,Name,Description,opportunity_code__c,image__c,description2__c,Amount') {
+		function find ($id, 
+					   $lstCol='Id,Name,Description,opportunity_code__c,image__c,description2__c,Amount',
+					   $lstColOpportunityLineItem='PricebookEntryId,Quantity,UnitPrice',
+					   $lstColPricebookEntry='Product2Id',
+					   $lstColProduct2 = 'ProductCode,Name') {
 	                		
 			$where = "Id='".$id."'";
 			$result = $this->fetchAll($lstCol,$where);
@@ -99,12 +167,11 @@ class Application_Model_Opportunities
 			/* On compléte avec le liste des produits */
 			$sales = Application_Model_SalesforceConnect::getInstance();
 				
-			$lstCol = 'PricebookEntryId,Quantity,UnitPrice';
 			
 			$where = "OpportunityId='".$id."'";
 				
 				
-			$vue['products'] = $sales->query('OpportunityLineItem', $lstCol, $where);
+			$vue['products'] = $sales->query('OpportunityLineItem', $lstColOpportunityLineItem, $where);
 
 			if (count($vue['products']) > 0) {
 				/* Une petite jointure pour récupérer les produits */
@@ -112,7 +179,6 @@ class Application_Model_Opportunities
 					/* On va chercher id du produit*/
 					$opportunityLineItem = $vue['products'][$i];
 					
-					$lstColPricebookEntry = 'Product2Id';
 					$where = "Id='".$opportunityLineItem['PricebookEntryId']."'";
 					$cols = $sales->query('PricebookEntry', $lstColPricebookEntry, $where);
 					
@@ -120,7 +186,6 @@ class Application_Model_Opportunities
 					$vue['products'][$i]['Product2Id'] =  $pid;
 					
 					/* recherche des informations produits */
-					$lstColProduct2 = 'ProductCode,Name';
 					$where = "Id='".$pid."'";
 					$cols = $sales->query('Product2', $lstColProduct2, $where);
 					

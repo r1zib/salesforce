@@ -13,10 +13,22 @@ class Application_Model_LiveDocs extends Zend_Service_LiveDocx_MailMerge
 	* @throws Zend_Service_LiveDocx_Exception
 	* @since  LiveDocx 1.0
 	*/
+	
+	public $info = array();
+	
 	public function assign($field, $value = null) {
 	
 		//echo 'assign '. $field. ' = '.$value .  "\n"  ;
+		$this->info[$field] = $value;
 		parent::assign($field, $value);
+	}
+	
+	/*
+	 * Permet de tracer les informations envoyés vers liveDocs
+	 */
+		
+	public function getInfo() {
+		return $this->info;
 	}
 	
 	

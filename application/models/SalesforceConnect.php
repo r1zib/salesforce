@@ -42,10 +42,12 @@ class Application_Model_SalesforceConnect {
     private function connect () {
     	try {
     		/* lecture du fichier de configs/application.ini */
-    		$user = Zend_Registry::get('config')->salesforce->user;
-    		$password = Zend_Registry::get('config')->salesforce->password;
-    		$token = Zend_Registry::get('config')->salesforce->token;
-    		$wdls = Zend_Registry::get('config')->salesforce->wdls;
+    		//$config = Registreconfig::getInstance()->getConfig();
+    		$config = Zend_Registry::get('config');
+    		$user = $config->salesforce->user;
+    		$password = $config->salesforce->password;
+    		$token = $config->salesforce->token;
+    		$wdls = $config->salesforce->wdls;
     			
     		$this->mySforceConnection = new SforceEnterpriseClient();
     		$this->mySforceConnection->createConnection($wdls);

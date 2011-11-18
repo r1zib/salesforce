@@ -28,3 +28,12 @@ The following is a sample VHOST you might want to consider for your project.
    </Directory>
 
 </VirtualHost>
+
+
+La base de donnée 
+=================
+Table User :
+Les mot de passe sont mis en clair dans la base de donnée car on besoin du mot de passe pour accéder à salesforce.
+
+
+
