@@ -55,8 +55,9 @@ class Application_Model_Products
 				$id = $vue['products'][$i]['Id'];
 				$sel = "Product2Id='".$id."' and Pricebook2Id = '".$pricebookid."'";
 				$info = $sales->query('PricebookEntry','UnitPrice,Pricebook2Id', $sel);
-			
-				$vue['products'][$i]['UnitPrice'] = $info[0]['UnitPrice'];
+                if (isset($info[0])) {			
+					$vue['products'][$i]['UnitPrice'] = $info[0]['UnitPrice'];
+                }
 				foreach ($info as $pricebookEntry) {
 					$vue['products'][$i]['UnitPrice'] = $pricebookEntry['UnitPrice'];
 				}

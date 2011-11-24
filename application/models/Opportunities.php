@@ -153,7 +153,7 @@ class Application_Model_Opportunities
 			/* cas particulier du montant */
 			if (isset($info['opportunity']['Amount'])) {
 				/* Calcul avec TVA */
-				$prix = round(intval(@$info['opportunity']['Amount']) *1.196,2) ;
+				$prix = $this->montant_ttc($info['opportunity']['Amount']);
 				$mailMerge->assign('Amount_ttc', $prix);
 			}
 
@@ -183,8 +183,8 @@ class Application_Model_Opportunities
 				$elt = array();
 				
 				$opt = 'std';
-				if (isset($product['option__c'])) {
-					$opt = $product['option__c'];
+				if (isset($product['Description'])) {
+					$opt = $product['Description'];
 				}	
 				
 				/* Montant des différents blocks */
@@ -193,8 +193,8 @@ class Application_Model_Opportunities
 				}
 				// TODO faire test si la zone n'est pas renseigné dans salesforces
 				// On ne sait pas gérer plusieurs champs sur un ligne
-				//$produits[$opt][] = $product;
-				$produits[$opt][] = $product['Quantity']. ' '.$product['Name'] ;
+				$produits[$opt][] = $product;
+				//$produits[$opt][] = $product['Quantity']. ' '.$product['Name'] ;
 
 				$montant[$opt] += $product['UnitPrice'] * $product['Quantity'];
 				
@@ -202,8 +202,27 @@ class Application_Model_Opportunities
 			}
 
 			foreach($produits as $cle=>$val) {
-				Zend_Debug::dump($val);
-				$mailMerge->assign('products_'.$cle, $val);
+				switch ($cle) {
+					case 'std': case 'opt1': case 'opt2' : case 'opt3' :
+						$lignes = array();
+						foreach ($val as $product) {
+							$lignes[] = $product['Quantity']. ' '.$product['Name'] ;
+						}
+						$mailMerge->assign('products_'.$cle, $lignes);
+						break;
+					case 'c1' : case 'c2' :case 'c3' :
+						$lignes = array();
+						foreach ($val as $product) {
+							$lignes[] = $product['Name'] ;
+							if (isset($product['complement__c'])) {
+								$lignes[] = $product['complement__c'] ;
+							}
+							$lignes[] = $product['UnitPrice'].'€ HT '.$this->montant_ttc($product['UnitPrice']). ' € TTC' ;
+						}
+						$mailMerge->assign('products_'.$cle, $lignes);
+						Zend_Debug::dump($lignes);
+						break;
+				}
 			}
 			
 			$mt_std = 0;
@@ -211,6 +230,7 @@ class Application_Model_Opportunities
 			if (isset($montant['std'])) {
 				$mt_std = $montant['std'];
 				$mailMerge->assign('products_std_amount', $mt_std);
+				$mailMerge->assign('products_std_amount_ttc', $this->montant_ttc($mt_std));
 			}
 			foreach($montant as $cle=>$val) {
 				$mt = 0;
@@ -220,6 +240,7 @@ class Application_Model_Opportunities
 				}
 				$mt += $mt_std;
 				$mailMerge->assign('products_'.$cle.'_amount', $mt);
+				$mailMerge->assign('products_'.$cle.'_amount_ttc', $this->montant_ttc($mt));
 			}
 			
 			
@@ -272,8 +293,8 @@ class Application_Model_Opportunities
 					$where = "Id='".$pid."'";
 					$cols = $sales->query('Product2', $lstColProduct2, $where);
 					
-					$vue['products'][$i]['ProductCode'] =  $cols[0]['ProductCode'];
-					$vue['products'][$i]['Name'] =  $cols[0]['Name'];
+					$vue['products'][$i]['ProductCode'] =  @$cols[0]['ProductCode'];
+					$vue['products'][$i]['Name'] =  @$cols[0]['Name'];
 				}
 			}
 			$vue['cols'] = explode(',', $lstColOpportunityLineItem.','.$lstColPricebookEntry.','.$lstColProduct2);
@@ -298,6 +319,14 @@ class Application_Model_Opportunities
 			$vue['cols'] = explode(',', $lstCol);
 			return $vue;
 		}
+		
+		/*
+		 * Calcul du montant en TTC
+		 */
+		function montant_ttc ($mt, $taxe = 1.196) {
+			return round(floatval($mt) *1.196,2);
+		}
+		
 
 }
 	

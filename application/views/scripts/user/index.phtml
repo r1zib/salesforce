@@ -1,0 +1,38 @@
+<!-- application/views/scripts/user/index.phtml -->
+<?php 
+$this->title = 'Liste des utilisateurs';
+$this->headTitle($this->title);
+?>
+ 
+<div id="view-content" class= "list">
+
+
+<p><a href="<?php echo $this->url(
+    array(
+        'controller' => 'user',
+        'action'     => 'add'
+    ),
+    'default',
+    true) ?>">New</a></p>
+
+
+<table> 
+	<thead>
+		<tr>
+			<td>Login</td><td>Privilége</td><td>Action</td>
+		</tr>
+	</thead>
+	<?php foreach ($this->entries as $user): ?>
+    <tr>
+	    <td><?php echo $this->escape($user->username) ?></td>
+	    <td><?php echo $this->escape($user->role) ?></td>
+	    <td>
+	    	<a href="<?php echo $this->url(array('controller'=>'user',
+                'action'=>'edit', 'id'=>$user->id));?>">Modifier</a>
+            <a href="<?php echo $this->url(array('controller'=>'user',
+                'action'=>'delete', 'id'=>$user->id));?>">Supprimer</a>
+	    </td>
+    </tr>
+    <?php endforeach; ?>
+</table>    
+</div>
