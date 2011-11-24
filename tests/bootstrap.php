@@ -17,7 +17,6 @@ set_include_path(implode(PATH_SEPARATOR, array(
 require_once 'Zend/Loader/Autoloader.php';
 Zend_Loader_Autoloader::getInstance();
 
-echo 'test : '.APPLICATION_PATH . '/configs/application.ini';
 $config = new Zend_Config_Ini (APPLICATION_PATH . '/configs/application.ini','testing');
 Zend_Registry::set('config', $config);
 

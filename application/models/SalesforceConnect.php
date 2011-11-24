@@ -1,12 +1,11 @@
 <?php
 /*
- * Permet de se connecter à Salesforce
+ * Permet de se connecter à Salesforce et de faire des requetes dans la base
  * Pattern Singleton 
  * 
  */
 require_once ('developerforce/soapclient/SforcePartnerClient.php');
 require_once ('developerforce/soapclient/SforceEnterpriseClient.php');
-
 
 class Application_Model_SalesforceConnect {
 	
@@ -41,19 +40,22 @@ class Application_Model_SalesforceConnect {
      */
     private function connect () {
     	try {
-    		/* lecture du fichier de configs/application.ini */
-    		//$config = Registreconfig::getInstance()->getConfig();
-    		$config = Zend_Registry::get('config');
+    		/*
+    		 *  lecture du fichier de configs/application.ini 
+    		 *  Si on est connecté alors on prend le paramétage du user
+    		 *  */
+    		$config = Azeliz_Registreconfig::getInstance()->getConfig();
     		$user = $config->salesforce->user;
     		$password = $config->salesforce->password;
     		$token = $config->salesforce->token;
-    		$wdls = $config->salesforce->wdls;
+    		$wsdl = $config->salesforce->wsdl;
     			
     		$this->mySforceConnection = new SforceEnterpriseClient();
-    		$this->mySforceConnection->createConnection($wdls);
+    		$this->mySforceConnection->createConnection($wsdl);
     		$this->mySforceConnection->login($user, $password.$token);
     	} catch (Exception $e) {
     		$msg = '<pre>Problème de connection :'."Exception ".$e->faultstring."<br/><br/>\n";
+    		$msg .= 'user = '.$user.'<br/>Password = '.$password.'<br/>token = '.$token.'<br/>';
     		$msg .= $this->infoMsg().'</pre>';
     		// Affichage à l'écran
     		 $log = Zend_Registry::get('log');
@@ -64,6 +66,12 @@ class Application_Model_SalesforceConnect {
     	return true;
     	
     }
+    /**
+    * Retourne les messages d'erreur de salesforces
+    * @return String Info de salesforce
+    */
+    
+    
     private function infoMsg(){
     	$msg = "Last Request:<br/>\n";
     	$msg .= $this->mySforceConnection->getLastRequestHeaders()."<br/>\n";

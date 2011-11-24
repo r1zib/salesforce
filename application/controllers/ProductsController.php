@@ -13,7 +13,7 @@ class ProductsController extends Zend_Controller_Action
         // Affiche de la liste des produits
         
     	$products = new Application_Model_Products();
-    	$this->view->entries = $products->fetchAll('Name,ProductCode,Id');
+    	$this->view->entries = $products->fetchAll();
     	
     }
 
@@ -22,7 +22,7 @@ class ProductsController extends Zend_Controller_Action
     	$id = $this->_getParam('id', 0);
     	if ($id > 0) {
     		$products = new Application_Model_Products();
-    		$this->view->entries = $products->find($id,'Name,ProductCode,Description,Family,Id,Description__c,image__c');
+    		$this->view->entries = $products->find($id);
     	}
     }
 

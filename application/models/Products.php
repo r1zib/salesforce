@@ -1,21 +1,15 @@
 <?php
-require_once 'ProductSalesforce.php';
 
 class Application_Model_Products
 {
 		function __construct() {
 		}
 
-		function microtime_float()
-		{
-			list($usec, $sec) = explode(" ", microtime());
-			return ((float)$usec + (float)$sec);
-		}
 		/*
 		 * Find permet de trouver 1 produit
 		 */
 		
-		function find ($id, $lstCol='', $pricebookid= '') {
+		function find ($id, $lstCol='Name,ProductCode,Description,Family,Id,Description__c,image__c', $pricebookid= '') {
 			
 			$where = "Id='".$id."'";
 			$vue = $this->fetchAll($lstCol,'',$where);
@@ -25,30 +19,26 @@ class Application_Model_Products
 		
 		
 
-		function fetchAll ($lstCol, $pricebookid= '', $where="") {
-			
-			$user = Zend_Registry::get('config')->salesforce->user;
-			$password = Zend_Registry::get('config')->salesforce->password;
-			$token = Zend_Registry::get('config')->salesforce->token;
-			$wdls = Zend_Registry::get('config')->salesforce->wdls;
-			
-			$sales = new ProductSalesforce($user, $password, $token, $wdls);
-			$sales->connection();
-			$time_start = $this->microtime_float();
+		function fetchAll ($lstCol='Name,ProductCode,Id', $pricebookid= '', $where="") {
+
+			$sales = Application_Model_SalesforceConnect::getInstance();
 			$vue = array();
-			//$where = "";
-			$vue['products'] = $sales->listProduct($lstCol, $where);
+			$time_start = $sales->microtime_float();
+			
+			$vue['products'] = $sales->query('Product2', $lstCol, $where);
+			
 			if (!is_array($vue['products'])) {
 				/* pb de query */
 				echo $vue['products'];
 			}
-			$time_end = $this->microtime_float();
+			$time_end = $sales->microtime_float();
 			
 			$vue['cols'] = explode(',', $lstCol);
-			echo 'tps : '.  ($time_end - $time_start);
+			$vue['tps'] = $time_end - $time_start;
+			
 			
 			$colsPrice = 'Name,Description,IsStandard,Id';
-			$vue['Pricebooks'] = $sales->listPricebook($colsPrice);
+			$vue['Pricebooks'] = $sales->query('Pricebook2',$colsPrice);
 			$vue['colsPrice'] = explode(',', $colsPrice);
 			
 			/* Quel est le pricebook sélectionné ?
@@ -64,7 +54,7 @@ class Application_Model_Products
 			for ($i=0;$i<count($vue['products']); $i++) {
 				$id = $vue['products'][$i]['Id'];
 				$sel = "Product2Id='".$id."' and Pricebook2Id = '".$pricebookid."'";
-				$info = $sales->listPricebookEntry('UnitPrice,Pricebook2Id', $sel);
+				$info = $sales->query('PricebookEntry','UnitPrice,Pricebook2Id', $sel);
 			
 				$vue['products'][$i]['UnitPrice'] = $info[0]['UnitPrice'];
 				foreach ($info as $pricebookEntry) {

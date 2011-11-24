@@ -16,20 +16,18 @@ class Application_Model_LiveDocs extends Zend_Service_LiveDocx_MailMerge
 	
 	public $info = array();
 	
-	public function assign($field, $value = null) {
+	/* Répertoire pour stocke le pdf */
+	public $_repertoire ;
+	/* acces web pour accéder au pdf */
+	public $_web;
+	/* Répertoire pour stocker les images */
+	public $_repertoireImage;
 	
-		//echo 'assign '. $field. ' = '.$value .  "\n"  ;
+	public function assign($field, $value = null) {
 		$this->info[$field] = $value;
 		parent::assign($field, $value);
 	}
 	
-	/*
-	 * Permet de tracer les informations envoyés vers liveDocs
-	 */
-		
-	public function getInfo() {
-		return $this->info;
-	}
 	
 	
 	/**
@@ -45,7 +43,7 @@ class Application_Model_LiveDocs extends Zend_Service_LiveDocx_MailMerge
 	* @since  LiveDocx 1.0
 	*/
 	
-	public function assignImage($url, $field, $rep = null) {
+	public function assignImage($field, $url, $rep = null) {
 		
 		list($rep, $nom) = $this->transfertImage($url, $rep);
 		Zend_Debug::dump($rep.$nom);
@@ -56,7 +54,7 @@ class Application_Model_LiveDocs extends Zend_Service_LiveDocx_MailMerge
 			
 		}
 				
-		$this->assign($field, $nom);
+		$this->assign('image:'.$field, $nom);
 		
 	}
 	
@@ -75,7 +73,7 @@ class Application_Model_LiveDocs extends Zend_Service_LiveDocx_MailMerge
 	public function transfertImage($url, $rep=null) {
 		
 		if ($rep == null) {
-			$rep = Zend_Registry::get('config')->livedocx->image;
+			$rep = $this->getRepertoireImage();
 		}	
 		
 		// Rien à faire, image est vide 
@@ -98,5 +96,66 @@ class Application_Model_LiveDocs extends Zend_Service_LiveDocx_MailMerge
 		
 	}
 	
+	/*
+	* Permet de tracer les informations envoyés vers liveDocs
+	*/
+	
+	public function getInfo() {
+	return $this->info;
+	}
+	
+	/**
+	* @param String $repertoire
+	* @return Application_Model_LiveDocs
+	*/
+	public function setRepertoire($repertoire)
+	{
+	    $this->_repertoire = $repertoire;
+	    return $this;
+	}
+	 
+	/**
+	* @return String
+	*/
+	public function getRepertoire()
+	{
+	    return $this->_repertoire;
+	}
+	
+	/**
+	* @param String $web
+	* @return Application_Model_LiveDocs
+	*/
+	public function setWeb($web)
+	{
+	    $this->_web = $web;
+	    return $this;
+	}
+	 
+	/**
+	* @return String
+	*/
+	public function getWeb()
+	{
+	    return $this->_web;
+	}
+	
+	/**
+	* @param String $repertoireImage
+	* @return Application_Model_LiveDocs
+	*/
+	public function setRepertoireImage($repertoireImage)
+	{
+	    $this->_repertoireImage = $repertoireImage;
+	    return $this;
+	}
+	 
+	/**
+	* @return String
+	*/
+	public function getRepertoireImage()
+	{
+	    return $this->_repertoireImage;
+	}
 }
 

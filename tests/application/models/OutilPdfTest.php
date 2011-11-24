@@ -11,12 +11,11 @@ class OutilPdfTest extends PHPUnit_Framework_TestCase
     public function testPdf()
     {
     	
-    	$rep_doc = Zend_Registry::get('config')->livedocx->repertoire;
     	$user = Zend_Registry::get('config')->livedocx->user;
     	$password = Zend_Registry::get('config')->livedocx->password;;
     	
-    	$file_doc = $rep_doc.'pack.doc';
-    	$file_pdf = $rep_doc.'pack.pdf';
+    	$file_doc = APPLICATION_PATH. "/../var/test/pack.doc";
+    	$file_pdf = APPLICATION_PATH. "/../var/test/pack.pdf";
     	echo $file_doc;
     		
     	$mailMerge = new Zend_Service_LiveDocx_MailMerge();
@@ -49,9 +48,10 @@ performance en toute sécurité.')
     	file_put_contents($file_pdf, $document);
     }
     
+    
+    /*
     function testPdfsuite () {
-    	$rep_doc = Zend_Registry::get('config')->livedocx->repertoire;
-    	$template = $rep_doc.'test1-template.doc';
+    	$template = APPLICATION_PATH "/../var/test/test1-template.doc';
     	$file_pdf = $rep_doc.'test.pdf';
     	
     	$user = Zend_Registry::get('config')->livedocx->user;
@@ -113,20 +113,7 @@ performance en toute sécurité.')
     	
     }
     
-    function testPdfsuite2 () {
-    	
-    	echo 'Test création :' . Zend_Registry::get('config')->livedocx->template;
-    	$oppor = new Application_Model_Opportunities();
-    	$oppor->createpdf("006U0000002KGHKIA4");
-    	echo 'Test création 2 :' . Zend_Registry::get('config')->livedocx->template;
-    	$oppor = new Application_Model_Opportunities();
-    	$oppor->createpdf("006U0000002uQNwIAM");
-    	
-    	
-    }	 
-    
-    
-    
+    */
 
 
 }

@@ -33,7 +33,7 @@ class OpportunitiesController extends Zend_Controller_Action
     	$id = $this->_getParam('id', 0);
     	if ($id > 0) {
     		$opportunities = new Application_Model_Opportunities();
-    		$this->view->entries = $opportunities->createpdf($id);
+    		$this->view->entries = $opportunities->createDocx($id);
     		
     	}	 
     	

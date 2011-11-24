@@ -8,61 +8,73 @@ class Application_Model_Opportunities
 		}
 		
 		/*
+		 * Permet de creer de d'initialiser mailMerge
+		 * return $mailMerge
+		 */
+		function init_liveDocs() {
+			try {
+				$mailMerge = new Application_Model_LiveDocs();
+				
+				$config = Azeliz_Registreconfig::getInstance()->getConfig();
+				$template = $config->livedocx->template;
+				$repertoire = $config->livedocx->repertoire;
+				$web       = $config->livedocx->web;
+				$repertoireImage = $config->livedocx->image;
+			
+				$user = $config->livedocx->user;
+				$password = $config->livedocx->password;
+					
+			
+				$mailMerge = new Application_Model_LiveDocs();
+				$mailMerge->setUsername($user)
+				->setPassword($password);
+					
+				$mailMerge->setLocalTemplate($template);
+				$mailMerge->setRepertoire($repertoire)->setWeb($web)->setRepertoireImage($repertoireImage);
+				
+				return $mailMerge;
+			} catch (Exception $e) {
+				
+				echo '<h1>Exception : ' .$e->getMessage().'</h1>';
+				//Zend_Debug::dump($e);
+			}
+		}
+		
+		function init_Docx() {
+			try {
+				$config = Azeliz_Registreconfig::getInstance()->getConfig();
+				$template = $config->livedocx->template;
+				$repertoire = $config->livedocx->repertoire;
+				$web       = $config->livedocx->web;
+				$repertoireImage = $config->livedocx->image;
+									
+				$phpdocx = new Application_Model_MyPHPWord($template);
+				$phpdocx->setRepertoire($repertoire)->setWeb($web)->setRepertoireImage($repertoireImage);
+				return $phpdocx;
+			} catch (Exception $e) {
+		
+				echo '<h1>Exception : ' .$e->getMessage().'</h1>';
+				//Zend_Debug::dump($e);
+			}
+		}		
+		/*
 		 * Find permet de trouver 1 produit
 		 */
 		function createpdf ($id) {
 		try {
+			$mailMerge = $this->init_liveDocs();
 			
-			$template = Zend_Registry::get('config')->livedocx->template;
-			$repertoire = Zend_Registry::get('config')->livedocx->repertoire;
-			$web       = Zend_Registry::get('config')->livedocx->web;
-				
-			$user = Zend_Registry::get('config')->livedocx->user;
-			$password = Zend_Registry::get('config')->livedocx->password;
-			
-	
-			$mailMerge = new Application_Model_LiveDocs();
-			$mailMerge->setUsername($user)
-			->setPassword($password);
-			
-			$mailMerge->setLocalTemplate($template);
-
 			$info = $this->find($id);
 			
-			if (isset($info['opportunity']['image__c'])) {
-				$url = $info['opportunity']['image__c'];
-				$mailMerge->assignImage($url,'image:photo' );
-			}
 			
-			
-			/* Information sur l'opportunitée */
-			$mailMerge->assign('opportunities_name', @$info['opportunity']['Name']);
-			
-			if (isset($info['opportunity']['Description'])) {
-				$mailMerge->assign('opportunities_description', @$info['opportunity']['Description']);
-			}
-			
-			if (isset($info['opportunity']['Amount'])) {
-				$mailMerge->assign('opportunities_amount', @$info['opportunity']['Amount']);
-				/* Calcul avec TVA */
-				$prix = round(intval(@$info['opportunity']['Amount']) *1.196,2) ;
-				$mailMerge->assign('opportunities_amount_ttc', $prix);
-			}
-			
+			$this->info_generale($info, $mailMerge);
+
 			
 			if (count($info['products']) > 0) {
-				$products = array();
-				foreach ($info['products'] as $product ) {
-					$elt = array();
-					$elt['product_quantity'] = @$product['Quantity'];
-					$elt['product_code'] = @$product['ProductCode'];
-					$elt['product_name'] = @$product['Name'];
-					$elt['product_unitprice'] = @$product['UnitPrice'];
-					$products[] = $elt;
-				}
-				$mailMerge->assign('product', $products);
-				
+				$mailMerge->assign('products', $info['products']);
 			}
+
+ 		    $this->info_nke($info, $mailMerge);
 			
 			
 			$mailMerge->createDocument();
@@ -74,9 +86,13 @@ class Application_Model_Opportunities
 			} else {
 				$name = $id.'.pdf';
 			}
-			file_put_contents($repertoire.$name, $document);
 			
-			$vue['pdf']= $web.$name;
+			file_put_contents($mailMerge->getRepertoire().$name, $document);
+			/* copie dans un répertoire accéssible */
+			copy($docx->getRepertoire().$name,APPLICATION_PATH.'/../public'.$docx->getWeb().$name);
+				
+			
+			$vue['pdf']= 'http://'.$_SERVER['SERVER_NAME'].$mailMerge->getWeb().$name;
 			return $vue;
 		} catch (Exception $e) {
 		    
@@ -86,11 +102,70 @@ class Application_Model_Opportunities
 			
 		}
 		/*
+		* Find permet de trouver 1 produit
+		*/
+		function createDocx ($id) {
+			try {
+				$docx = $this->init_Docx();
+					
+				$info = $this->find($id);
+					
+				$this->info_generale($info, $docx);
+				$this->info_nke($info, $docx);
+
+				
+				/* nom du fichier pdf, le nom du code de pack ou id de l'opportunities */
+				if (isset($info['opportunity']['opportunity_code__c']) &&  $info['opportunity']['opportunity_code__c'] !== '') {
+					$name = $info['opportunity']['opportunity_code__c'].'.docx';
+				} else {
+					$name = $id.'.docx';
+				}
+				$docx->save($docx->getRepertoire().$name);
+				/* copie dans un répertoire accéssible */
+				copy($docx->getRepertoire().$name,APPLICATION_PATH.'/../public'.$docx->getWeb().$name);
+				$vue['pdf']= 'http://'.$_SERVER['SERVER_NAME'].$docx->getWeb().$name;
+				return $vue;
+			} catch (Exception $e) {
+		
+				echo '<h1>Exception : ' .$e->getMessage().'</h1>';
+				//Zend_Debug::dump($e);
+			}
+				
+		}
+		
+		/*
 		* cas particulier du modèle nke
 		* @param $inso array tableau des informations de salesforces
 		* @param Zend_Service_LiveDocx_MailMerge le service pour créer le pdf
 		*/
-		function optionnke ($info,Zend_Service_LiveDocx_MailMerge $mailMerge) {
+		// TO Utiliser un interface à la place de la class 
+		
+		function info_generale ($info, $mailMerge) {
+			foreach ($info['opportunity'] as $cle =>$value) {
+				if (strpos('image',$cle) === 0 ) {
+					$url = $info['opportunity']['image__c'];
+					$mailMerge->assignImage($cle,$value );
+				} else {
+					$mailMerge->assign($cle, $value);
+				}
+			}
+			
+			/* cas particulier du montant */
+			if (isset($info['opportunity']['Amount'])) {
+				/* Calcul avec TVA */
+				$prix = round(intval(@$info['opportunity']['Amount']) *1.196,2) ;
+				$mailMerge->assign('Amount_ttc', $prix);
+			}
+
+		}		
+		
+		
+		/*
+		* cas particulier du modèle nke
+		* @param $inso array tableau des informations de salesforces
+		* @param Zend_Service_LiveDocx_MailMerge le service pour créer le pdf
+		*/
+		function info_nke ($info,$mailMerge) {
 					
 
 		/* la liste des produits ont une destination  :
@@ -117,33 +192,37 @@ class Application_Model_Opportunities
 					$montant[$opt] = 0;
 				}
 				// TODO faire test si la zone n'est pas renseigné dans salesforces
-				$produits[$opt] = $product;
+				// On ne sait pas gérer plusieurs champs sur un ligne
+				//$produits[$opt][] = $product;
+				$produits[$opt][] = $product['Quantity']. ' '.$product['Name'] ;
 
 				$montant[$opt] += $product['UnitPrice'] * $product['Quantity'];
 				
+								
 			}
-			Zend_Debug::dump($produits);			
-			foreach($produits as $cle=>$val) {
 
-				$mailMerge->assign('product_'.$cle, $val);
+			foreach($produits as $cle=>$val) {
+				Zend_Debug::dump($val);
+				$mailMerge->assign('products_'.$cle, $val);
 			}
+			
 			$mt_std = 0;
 			/* calcul des prix : */
 			if (isset($montant['std'])) {
 				$mt_std = $montant['std'];
-				$mailMerge->assign('product_amount_std', $mt_std);
+				$mailMerge->assign('products_std_amount', $mt_std);
 			}
 			foreach($montant as $cle=>$val) {
 				$mt = 0;
+				if ($cle == 'std') continue;
 				if (isset($montant[$cle])) {
 					$mt = $montant[$cle];
 				}
 				$mt += $mt_std;
-				$mailMerge->assign('product_amount_'.$cle, $mt_std);
+				$mailMerge->assign('products_'.$cle.'_amount', $mt);
 			}
-				
 			
-					
+			
 		}
 			
 		}		
@@ -153,12 +232,16 @@ class Application_Model_Opportunities
 		* @param string lstCol liste des champs 
 		* @return un tableau de la liste des enregistrements
 		*/
-		function find ($id, 
-					   $lstCol='Id,Name,Description,opportunity_code__c,image__c,description2__c,Amount',
-					   $lstColOpportunityLineItem='PricebookEntryId,Quantity,UnitPrice',
-					   $lstColPricebookEntry='Product2Id',
-					   $lstColProduct2 = 'ProductCode,Name') {
-	                		
+		function find ($id) {
+
+			
+			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
+			$config = Azeliz_Registreconfig::getInstance()->getConfig();
+			$lstCol = $config->opportunity->Opportunity;
+			$lstColOpportunityLineItem=$config->opportunity->OpportunityLineItem;
+			$lstColPricebookEntry=$config->opportunity->PricebookEntry;
+			$lstColProduct2=$config->opportunity->Product2;
+				
 			$where = "Id='".$id."'";
 			$result = $this->fetchAll($lstCol,$where);
 			
@@ -192,9 +275,8 @@ class Application_Model_Opportunities
 					$vue['products'][$i]['ProductCode'] =  $cols[0]['ProductCode'];
 					$vue['products'][$i]['Name'] =  $cols[0]['Name'];
 				}
-				$lstCol .= ','.$lstColPricebookEntry.','.$lstColProduct2;
 			}
-			$vue['cols'] = explode(',', $lstCol);
+			$vue['cols'] = explode(',', $lstColOpportunityLineItem.','.$lstColPricebookEntry.','.$lstColProduct2);
 
 			return $vue;
 			
@@ -208,8 +290,8 @@ class Application_Model_Opportunities
   		 * @return un tableau de la liste des enregistrements
      	 */
 
-		function fetchAll ($lstCol='Name,Id',  $where="") {
-			
+		function fetchAll ($lstCol='Name,Id',$where="") {
+			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
 			$sales = Application_Model_SalesforceConnect::getInstance();
 
 			$vue['opportunities'] = $sales->query('Opportunity', $lstCol, $where);
