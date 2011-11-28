@@ -93,6 +93,8 @@ class Application_Model_Opportunities
 				
 			
 			$vue['pdf']= 'http://'.$_SERVER['SERVER_NAME'].$mailMerge->getWeb().$name;
+			
+			Zend_Debug::dump($info);
 			return $vue;
 		} catch (Exception $e) {
 		    
@@ -107,9 +109,11 @@ class Application_Model_Opportunities
 		function createDocx ($id) {
 			try {
 				$docx = $this->init_Docx();
-					
+				$vue['Id']= $id;
+				
 				$info = $this->find($id);
-					
+				$vue['Name']= $info['opportunity']['Name'];
+				
 				$this->info_generale($info, $docx);
 				$this->info_nke($info, $docx);
 
@@ -126,9 +130,9 @@ class Application_Model_Opportunities
 				$vue['pdf']= 'http://'.$_SERVER['SERVER_NAME'].$docx->getWeb().$name;
 				return $vue;
 			} catch (Exception $e) {
-		
-				echo '<h1>Exception : ' .$e->getMessage().'</h1>';
-				//Zend_Debug::dump($e);
+				$vue['log'] = $e->getMessage();
+				$vue['pdf'] = "KO";
+				return $vue;
 			}
 				
 		}
@@ -142,14 +146,13 @@ class Application_Model_Opportunities
 		
 		function info_generale ($info, $mailMerge) {
 			foreach ($info['opportunity'] as $cle =>$value) {
-				if (strpos('image',$cle) === 0 ) {
-					$url = $info['opportunity']['image__c'];
+				if (strpos($cle,'image') === 0 ) {
 					$mailMerge->assignImage($cle,$value );
+					
 				} else {
 					$mailMerge->assign($cle, $value);
 				}
 			}
-			
 			/* cas particulier du montant */
 			if (isset($info['opportunity']['Amount'])) {
 				/* Calcul avec TVA */
@@ -218,9 +221,9 @@ class Application_Model_Opportunities
 								$lignes[] = $product['complement__c'] ;
 							}
 							$lignes[] = $product['UnitPrice'].'€ HT '.$this->montant_ttc($product['UnitPrice']). ' € TTC' ;
+							$lignes[] = "";
 						}
 						$mailMerge->assign('products_'.$cle, $lignes);
-						Zend_Debug::dump($lignes);
 						break;
 				}
 			}
@@ -258,6 +261,7 @@ class Application_Model_Opportunities
 			
 			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
 			$config = Azeliz_Registreconfig::getInstance()->getConfig();
+			
 			$lstCol = $config->opportunity->Opportunity;
 			$lstColOpportunityLineItem=$config->opportunity->OpportunityLineItem;
 			$lstColPricebookEntry=$config->opportunity->PricebookEntry;
@@ -286,15 +290,23 @@ class Application_Model_Opportunities
 					$where = "Id='".$opportunityLineItem['PricebookEntryId']."'";
 					$cols = $sales->query('PricebookEntry', $lstColPricebookEntry, $where);
 					
-					$pid = $cols[0]['Product2Id'];
-					$vue['products'][$i]['Product2Id'] =  $pid;
+					if (count($cols) == 0 ) {
+						
+						
+					} 
+					foreach ( $cols[0] as $cle => $val) {
+						$vue['products'][$i][$cle] = $val;
+					}
 					
+					$pid = $cols[0]['Product2Id'];
+										
 					/* recherche des informations produits */
 					$where = "Id='".$pid."'";
 					$cols = $sales->query('Product2', $lstColProduct2, $where);
-					
-					$vue['products'][$i]['ProductCode'] =  @$cols[0]['ProductCode'];
-					$vue['products'][$i]['Name'] =  @$cols[0]['Name'];
+					/* il n'y a qu'une seule ligne */
+					foreach ( $cols[0] as $cle => $val) {
+						$vue['products'][$i][$cle] = $val;
+					}
 				}
 			}
 			$vue['cols'] = explode(',', $lstColOpportunityLineItem.','.$lstColPricebookEntry.','.$lstColProduct2);
@@ -324,7 +336,7 @@ class Application_Model_Opportunities
 		 * Calcul du montant en TTC
 		 */
 		function montant_ttc ($mt, $taxe = 1.196) {
-			return round(floatval($mt) *1.196,2);
+			return number_format(round(floatval($mt) *1.196,2),2,',','.');
 		}
 		
 

@@ -6,9 +6,22 @@ class Zend_View_Helper_LoggedInAs extends Zend_View_Helper_Abstract
 		$auth = Zend_Auth::getInstance();
 		if ($auth->hasIdentity()) {
 			$username = $auth->getIdentity()->username;
+			$user = $auth->getIdentity();
 			$logoutUrl = $this->view->url(array('controller'=>'auth',
                 'action'=>'logout'), null, true);
-			return 'Welcome ' . $username .  '. <a href="'.$logoutUrl.'">Logout</a>';
+			$url =$this->view->url(array('controller'=>'user',
+			                            'action'=>'edit',
+					   					'id'=>$user->id));
+				
+			$info = '<div class ="menuButton"><span class="menu">'.$user->username.'</span>';
+			$info .= '<ul> 
+					<li><a href="'.$url.'">Mon profil</a></li>
+					<li class="separator">​</li>
+					<li><a href="'.$logoutUrl.'" class="logout">se déconnecter</a></li>
+					</ul></div>';
+			
+			
+			return $info;
 		}
 
 		$request = Zend_Controller_Front::getInstance()->getRequest();
@@ -20,8 +33,8 @@ class Zend_View_Helper_LoggedInAs extends Zend_View_Helper_Abstract
 		$form = new Application_Form_Login();;
 		$loginUrl = $this->view->url(array('controller'=>'auth',
 		                'action'=>'index'), null, true);
-
-		return $form->setAction($loginUrl);
+        $info = '<div class ="menuButton"><span class="menu"> Se connecter </span><ul><li class="form">'.$form->setAction($loginUrl).'</li></ul></div>';
+		return $info;
 		//$loginUrl = $this->view->url(array('controller'=>'auth', 'action'=>'index'));
 		//return '<a href="'.$loginUrl.'">Login</a>';
 	}

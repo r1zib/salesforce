@@ -31,6 +31,7 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 {
 	/* Repertoire de résultats */
 	private $out;
+	private $in;
 
 	public function setUp()
 	{
@@ -45,6 +46,9 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 		$autoloader->setFallbackAutoloader(false);
 		//Zend_Loader::loadClass('PHPWord',APPLICATION_PATH . '/../library/PHPWord/');
 		$this->out = APPLICATION_PATH . '/../tests/var';
+		$this->in = __DIR__.'/src';
+		
+		
 	}
 
 	public function test_install () {
@@ -64,7 +68,7 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 	}
 	public function test_modif_doc1_install () {
 		$PHPWord = new PHPWord();
-		$document = $PHPWord->loadTemplate(__DIR__.'/Template.docx');
+		$document = $PHPWord->loadTemplate($this->in.'/Template.docx');
 		$document->setValue('Value1', 'Sun');
 		$document->setValue('Value2', 'Mercury');
 		$document->setValue('Value3', 'Venus');
@@ -81,15 +85,18 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 
 		$document->save($this->out.'/Template1-result.docx');
 	}
+	
+	
+	
 	/*
 	* Test de create_p : création d'une ligne dans le dom
 	*/
 	public function test_phpdoc_template_create_p () {
 	
 	
-		$PHPWord = new PHPWord_Template(__DIR__.'/phpword_template_test.docx');
+		$PHPWord = new PHPWord_Template($this->in.'/phpword_template_test.docx');
 		$dom = new DOMDocument();
-		$ret = $dom->load(__DIR__.'/document.xml');
+		$ret = $dom->load($this->in.'/document.xml');
 		$this->assertTrue($ret,'chargement du xml');
 		$listBalise = $dom->getElementsByTagName('t');
 		Zend_Debug::dump('nombre de balise :' .$listBalise->length);
@@ -107,7 +114,7 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 	
 		$result = $dom->saveXML();
 	
-		$expect = file_get_contents(__DIR__.'/document.create_p.xml');
+		$expect = file_get_contents($this->in.'/document.create_p.xml');
 		$this->assertEquals($expect, $result);
 		$PHPWord->save($this->out.'/document.out.create_p.docx');
 	
@@ -120,9 +127,9 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 	public function test_phpdoc_template_maj_list () {
 	
 	
-		$PHPWord = new PHPWord_Template(__DIR__.'/phpword_template_test.docx');
+		$PHPWord = new PHPWord_Template($this->in.'/phpword_template_test.docx');
 		$dom = new DOMDocument();
-		$ret = $dom->load(__DIR__.'/document.xml');
+		$ret = $dom->load($this->in.'/document.xml');
 	
 		$this->assertTrue($ret,'chargement du xml');
 	
@@ -143,7 +150,7 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 	
 		$result = $dom->saveXML();
 			
-		$expect = file_get_contents(__DIR__.'/document.maj_list.xml');
+		$expect = file_get_contents($this->in.'/document.maj_list.xml');
 		$this->assertEquals($expect, $result);
 		$PHPWord->save($this->out.'/phpword_template_test.docx');
 	}
@@ -153,28 +160,45 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 	*/
 	public function test_phpdoc_template_replace_image () {
 	
-		$ret = copy(__DIR__.'/Templatenke4.docx',$this->out.'/test_template_replace_image.docx');
+		$ret = copy($this->in.'/Templatenke4.docx',$this->out.'/test_template_replace_image.docx');
 		$this->assertTrue($ret);
 		$PHPWord = new PHPWord_Template($this->out.'/test_template_replace_image.docx');
 	
-		$ret = $PHPWord->remplace_image('image2.png', __DIR__.'/first-image1.png');
+		$ret = $PHPWord->remplace_image('image2.png', $this->in.'/first-image1.png');
 		$this->assertTrue($ret);
 		/* vérifi*/
-		$ret = $PHPWord->remplace_image('image3.jpg', __DIR__.'/first-image2.jpg');
+		
+		$ret = $PHPWord->remplace_image('image3.jpg', $this->in.'/first-image2.jpg');
 		$this->assertTrue($ret);
-	
+	    
+		/* Test des messages d'erreur */
+		$ret = $PHPWord->remplace_image('imageTOTO.jpg', $this->in.'/first-image2.jpg');
+		$this->assertStringStartsWith('RI', $ret);
+		$ret = $PHPWord->remplace_image('image2.png', $this->in.'/firstTOTO-image2.jpg');
+		$this->assertStringStartsWith('RI', $ret);
+		
+		
 		$PHPWord->save($this->out.'/test_template_replace_image.docx');
+		
+		$getImagesize = $PHPWord->getImageSize($this->in.'/first-image1.png');
+		Zend_Debug::dump($getImagesize);
+		$this->assertEquals($getImagesize[0], 529);
+		$this->assertEquals($getImagesize[1], 487);
+		
+		
+			
+		
 	}
 	
 	public function test_nke3_install () {
 		$PHPWord = new PHPWord();
-		$document = $PHPWord->loadTemplate(__DIR__.'/Templatenke4.docx');
+		$document = $PHPWord->loadTemplate($this->in.'/Template2-filigrane.docx');
 
 		$info2 = array (
 					"intro__c" => "Nous vous proposons au travers de cette offre de la qualité des produits nke pour votre First.",
 					"Name" => "FIRST",
-					"image__c" => __DIR__.'/first-image1.png',
-					"image2__c" => __DIR__.'/first-image2.jpg',
+					"image__c" => $this->in.'/first-image1.png',
+					"image2__c" => $this->in.'/first-image2.jpg',
 			
 					"products_std" =>	Array(
 		Array ('Name' => 'Multifonction TL25', 'option__c' => 'std', 'UnitPrice' => 10, 'Quantity'=>1),
@@ -223,8 +247,8 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 		foreach ($info2 as $cle =>$value) {
 			if (strpos( $cle,'image') === 0) {
 			   switch ($cle) {
-			   	case 'image__c': $cleimg = 'image2.png'; break;
-			   	case 'image2__c' : $cleimg = 'image3.jpg'; break;
+			   	case 'image__c': $cleimg = 'image1.png'; break;
+			   	case 'image2__c' : $cleimg = 'image2.jpg'; break;
 			   }
 			   $ret = $document->remplace_image($cleimg, $value);
 			   $this->assertTrue($ret, 'return of remplace_image');
@@ -248,6 +272,5 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 		$document->save($this->out.'/Templatenke3-result.docx');
 
 	}
-
 
 }

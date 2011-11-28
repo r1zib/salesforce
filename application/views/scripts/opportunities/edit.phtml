@@ -36,7 +36,9 @@ foreach ($this->entries['opportunity'] as $cle=>$val) {
 		<td><a href="<?php 
 	echo $this->url(array('controller'=>'products',
                               'action'=>'edit', 
-                              'id'=>$element['Product2Id']));?>">Détail</a></td>
+                              'id'=>$element['Product2Id']));?>">Détail</a>
+                              
+        </td>
 
 		<?php foreach ($this->entries['cols'] as $col) : ?>
 		<td><?php

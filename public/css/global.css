@@ -34,3 +34,64 @@ z-index : 100 ;
 .loginform{
 float : right ;
 }
+
+/* Gestion des sélection multiple */
+
+.menuButton .menu{
+	border: 1px solid rgba(0, 0, 0, 0.1);
+	border-color: #CCCCCC #BBBBBB #A0A0A0;
+    border-left: 1px solid #BBBBBB;
+    border-radius: 3px 3px 3px 3px;
+    border-right: 1px solid #BBBBBB;
+    border-style: solid;
+    border-width: 1px;
+	background: url("../img/sel.png") no-repeat top right;
+	position: relative; 
+	padding: 5px 20px 5px 5px;
+}
+
+.menuButton ul {
+	display: none;
+	-webkit-box-shadow: 0 4px 10px #8b8b8b;
+	-moz-box-shadow: 0 4px 10px #8b8b8b;
+	box-shadow: 0 4px 10px #8b8b8b;
+	padding: 5px 10px;
+	background: white;
+	list-style-type:none;
+}
+
+.menuButton ul.active {
+	display: block;
+	position: absolute;
+	
+}
+.menuButton ul li:hover {
+	background: #EEEEEE;
+}
+.menuButton ul li.form:hover {
+	background: none;
+}
+
+.logout {
+	padding-left: 20px;
+	background: url("../img/logout.png") no-repeat top left;
+}
+.separator {
+    font-size : 0pt;
+    line-height : 0pt;
+    margin : 0px;
+    padding : 0px;
+    clear : both;
+    opacity : 0.4;
+    filter : alpha(opacity=40);
+    zoom : 1;
+    float : none;
+    width : auto;
+    height : 0px;
+    margin-top : 15px;
+    margin-bottom : 10px;
+    border-top : 1px solid #918A88;
+    border-bottom : 1px solid white;
+}
+
+

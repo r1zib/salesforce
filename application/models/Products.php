@@ -9,8 +9,13 @@ class Application_Model_Products
 		 * Find permet de trouver 1 produit
 		 */
 		
-		function find ($id, $lstCol='Name,ProductCode,Description,Family,Id,Description__c,image__c', $pricebookid= '') {
+		function find ($id) {
 			
+			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
+			$config = Azeliz_Registreconfig::getInstance()->getConfig();
+			$lstCol = $config->product->Product2;
+			
+				
 			$where = "Id='".$id."'";
 			$vue = $this->fetchAll($lstCol,'',$where);
 			 

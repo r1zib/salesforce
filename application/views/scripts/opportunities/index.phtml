@@ -1,8 +1,22 @@
 <div id="view-content" class= "list">
 
+<form action='<?php echo $this->url(array('controller'=>'opportunities',
+                                        'action'=>'createallpdf')); ?>' 
+               method='post'>
+
 <table> 
 	<thead>
 	<tr>
+		<td>
+			<div class="selected menuButton">
+			<span class="menu"><input type="checkbox" name="selected_id[]" title="" value=""></span>
+			<ul> <li class="all">Tous</li>
+				<li class="none">Aucun</li>
+			</ul>
+			</div>
+		</div>
+		
+		</td>
 		<td>Action</td>
 	<?php foreach ($this->entries['cols'] as $col) : 	?>
 		<td><?php echo $col; ?></td>
@@ -12,6 +26,7 @@
 	
 	<?php foreach ($this->entries['opportunities'] as $element) : ?>
 	<tr>
+		<td class="select"><input type="checkbox" name="selected_id[]" title="" value="<?php echo $element['Id']; ?>"></td>
 		<td><a href="<?php 
 	echo $this->url(array('controller'=>'opportunities',
                               'action'=>'edit', 
@@ -29,4 +44,13 @@
 	</tr>
 	<?php endforeach;?>
 </table>
+
+<p> <select name="submit_mult">
+    <option value="Pour la sélection :" selected="selected">Pour la sélection :</option>
+    <option value="createallpdf">Créer les pdf</option>
+    </select>
+    <input type="submit" value="ok"/>
+    </p>
+
+</form>
 </div>

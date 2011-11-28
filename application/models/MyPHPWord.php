@@ -53,17 +53,20 @@ class Application_Model_MyPHPWord extends PHPWord_Template
 
 	public function assignImage($field,$url, $rep = null) {
 
+		
 		list($rep, $nom) = $this->transfertImage($url, $rep);
 		
 		switch ($field) {
-			case 'image__c': $cleimg = 'image2.png'; break;
-			case 'image2__c' : $cleimg = 'image3.jpg'; break;
+			case 'image2__c': $cleimg = 'image1.png'; break;
+			case 'image__c' : $cleimg = 'image2.jpg'; break;
 			default:
 				throw new Zend_Service_Exception("Le champ n'est pas géré : ".$field."\n",1);
 			break;
 		}
-		
-		$this->remplace_image($field,$rep.$nom);
+		$msg = $this->remplace_image($cleimg,$rep.$nom);
+		if (is_string($msg)) {
+			throw new Zend_Service_Exception("Pb dans le remplacement de l'image : ".$msg."\n",1);
+		}
 		
 	}
 
@@ -82,14 +85,14 @@ class Application_Model_MyPHPWord extends PHPWord_Template
 	public function transfertImage($url, $rep=null) {
 
 		if ($rep == null) {
-			$rep = Zend_Registry::get('config')->livedocx->image;
+			$rep = $this->getRepertoireImage();
 		}
 
 		// Rien à faire, image est vide
 		if ($url == '') return ;
 
 		$file = file_get_contents($url);
-
+		
 		if ($file === false) {
 			throw new Zend_Service_Exception('PB dans la lecture de'.$url."\n",1);
 		}

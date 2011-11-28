@@ -53,6 +53,9 @@ class Azeliz_Registreconfig {
 				$configUser = new Zend_Config_Ini($user->config,
 				                              APPLICATION_ENV);
 			}
+			
+			
+			
 			/* Salesforce */
 			if (!empty($user->sf_login)) {
 				$config->salesforce->user = $user->sf_login;
@@ -94,6 +97,15 @@ class Azeliz_Registreconfig {
 			if (isset($configUser->opportunity->Product2)) {
 				$config->opportunity->Product2 = $configUser->opportunity->Product2;
 			}
+			
+			
+			/* Répertoire du client */
+			$rep = dirname($user->config);
+			//$config->__set('client') = 'test';
+			
+			
+			
+			
 			
 			//Zend_Debug::dump($config->opportunity);
 			//Zend_Debug::dump($configUser->opportunity);

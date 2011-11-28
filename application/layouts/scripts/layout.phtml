@@ -9,7 +9,10 @@
   <?php echo $this->headLink()->appendStylesheet('/css/screen.css','screen, projection'); ?>
   <?php echo $this->headLink()->appendStylesheet('/css/print.css','print'); ?>
   <!--[if lt IE 8]><?php echo $this->headLink()->appendStylesheet('/css/print.css','print'); ?><![endif]-->
-  <?php echo $this->headLink()->appendStylesheet('/css/global.css') ?>
+  <?php echo $this->headLink()->appendStylesheet('/css/global.css'); ?>
+  <!-- JS -->
+  <?php echo $this->headScript()->appendFile('https://ajax.googleapis.com/ajax/libs/jquery/1.7.0/jquery.min.js'); ?>
+  <?php echo $this->headScript()->appendFile('/js/global.js'); ?>
 
 </head>
 <body>

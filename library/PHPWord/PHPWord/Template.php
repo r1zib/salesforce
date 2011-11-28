@@ -193,24 +193,45 @@ class PHPWord_Template {
     	 *  /word/media
     	 */
     	if (!file_exists($urlImage)) {
-    		return "pb urlImage.";
+    		return "RI : pb urlImage.";
     	}
     	
 		$name = 'word/media/'.$search;
 		
 		$info = $this->_objZip->statName($name);
 	    // l'image n'est pas trouvé 
-		if ($info === FALSE) return " L'image n'est pas présente dans le docx.";;
+		if ($info === FALSE) return "RI : L'image n'est pas présente dans le docx. (".$name.")";
 
 		// image est trouvé, il reste à la remplacer
 		$ret = $this->_objZip->deleteName($name);
-		if (!$ret) return 'pb delete image';
+		if (!$ret) return 'RI pb delete image';
 		$ret = $this->_objZip->addFile($urlImage,$name);
-		echo 'remplacement image : '.$name.' -> '.$urlImage. "\n";
-				
+		if (!$ret) return 'RI addFile';
+
 		return TRUE;
 		    	
 	}
+    /* Permet de récupérer la taille d'une image dans le docx
+     *  -> utile pour retailler l'image de remplacement
+     *  @param String $search nom de l'image
+     *  @return array an array with 7 elements.
+     *    0 -> width  
+     *    1 -> height of the image 
+     */
+	
+   function getImageSize($search) {
+   		$name = 'word/media/'.$search;
+     	$image =$this->_objZip->getFromName($name);
+     	/* extraction de l'image du zip */
+     	$this->_objZip->extractTo(dirname($this->_tempFileName),$name);
+     	$file = dirname($this->_tempFileName).'/'.$name;
+     	$info = getimagesize($file);
+     	/* suppression de l'image */
+     	$ret = unlink($file);
+     	
+      return $info;
+   }
+   		
     
     
     /**
