@@ -178,12 +178,12 @@ class PHPWordTest extends PHPUnit_Framework_TestCase
 		$this->assertStringStartsWith('RI', $ret);
 		
 		
-		$PHPWord->save($this->out.'/test_template_replace_image.docx');
 		
-		$getImagesize = $PHPWord->getImageSize($this->in.'/first-image1.png');
+		$getImagesize = $PHPWord->getImageSize('image2.png');
 		Zend_Debug::dump($getImagesize);
 		$this->assertEquals($getImagesize[0], 529);
 		$this->assertEquals($getImagesize[1], 487);
+		$PHPWord->save($this->out.'/test_template_replace_image.docx');
 		
 		
 			

@@ -57,8 +57,8 @@ class Application_Model_MyPHPWord extends PHPWord_Template
 		list($rep, $nom) = $this->transfertImage($url, $rep);
 		
 		switch ($field) {
-			case 'image2__c': $cleimg = 'image1.png'; break;
-			case 'image__c' : $cleimg = 'image2.jpg'; break;
+			case 'image__c': $cleimg = 'image1.png'; break;
+			case 'image2__c' : $cleimg = 'image2.jpg'; break;
 			default:
 				throw new Zend_Service_Exception("Le champ n'est pas géré : ".$field."\n",1);
 			break;
@@ -90,6 +90,12 @@ class Application_Model_MyPHPWord extends PHPWord_Template
 
 		// Rien à faire, image est vide
 		if ($url == '') return ;
+		
+		/* Cas particulier d'une image sur le serveur */
+		$site = 'http://'.$_SERVER['SERVER_NAME'];
+		if (strpos($url,$site) === 0) {
+			$url = APPLICATION_PATH.'/../public'.substr($url, strlen($site)); 
+		} 
 
 		$file = file_get_contents($url);
 		

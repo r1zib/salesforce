@@ -57,6 +57,17 @@ class Application_Model_Opportunities
 				//Zend_Debug::dump($e);
 			}
 		}		
+		
+		function init_Json() {
+			try {
+				$json = new Application_Model_ToJson();
+				return $json;
+			} catch (Exception $e) {
+				echo '<h1>Exception : ' .$e->getMessage().'</h1>';
+				//Zend_Debug::dump($e);
+			}
+		}
+		
 		/*
 		 * Find permet de trouver 1 produit
 		 */
@@ -117,7 +128,6 @@ class Application_Model_Opportunities
 				$this->info_generale($info, $docx);
 				$this->info_nke($info, $docx);
 
-				
 				/* nom du fichier pdf, le nom du code de pack ou id de l'opportunities */
 				if (isset($info['opportunity']['opportunity_code__c']) &&  $info['opportunity']['opportunity_code__c'] !== '') {
 					$name = $info['opportunity']['opportunity_code__c'].'.docx';
@@ -136,13 +146,28 @@ class Application_Model_Opportunities
 			}
 				
 		}
-		
 		/*
-		* cas particulier du modèle nke
+		* Find permet de trouver 1 produit
+		*/
+		function createJson ($id) {
+			try {
+				$docx = $this->init_Json();
+				$info = $this->find($id);
+				$this->info_generale($info, $docx);
+				$this->info_nke($info, $docx);
+			} catch (Exception $e) {
+				$info['log'] = $e->getMessage();
+			}
+			return $info;
+
+		}
+
+		/*
+		 * cas particulier du modèle nke
 		* @param $inso array tableau des informations de salesforces
 		* @param Zend_Service_LiveDocx_MailMerge le service pour créer le pdf
 		*/
-		// TO Utiliser un interface à la place de la class 
+		// TO Utiliser un interface à la place de la class
 		
 		function info_generale ($info, $mailMerge) {
 			foreach ($info['opportunity'] as $cle =>$value) {

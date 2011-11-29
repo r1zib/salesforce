@@ -3,9 +3,10 @@
 
 <!--
 Salesforce.com Enterprise Web Services API Version 23.0
-Generated on 2011-11-24 15:12:10 +0000.
+Generated on 2011-11-29 13:55:13 +0000.
 
 Package Versions:
+Informatica Data Loader (Version: 1.14, Namespace: infa)
 Salesforce for Google AdWords (Version: 166.1, Namespace: sfga)
 
 Copyright 1999-2011 salesforce.com, inc.
@@ -2951,6 +2952,7 @@ All Rights Reserved
                         <element name="CreatedDate" nillable="true" minOccurs="0" type="xsd:dateTime"/>
                         <element name="Description" nillable="true" minOccurs="0" type="xsd:string"/>
                         <element name="Events" nillable="true" minOccurs="0" type="tns:QueryResult"/>
+                        <element name="Familly__c" nillable="true" minOccurs="0" type="xsd:string"/>
                         <element name="FeedSubscriptionsForEntity" nillable="true" minOccurs="0" type="tns:QueryResult"/>
                         <element name="Feeds" nillable="true" minOccurs="0" type="tns:QueryResult"/>
                         <element name="Fiscal" nillable="true" minOccurs="0" type="xsd:string"/>
@@ -7682,7 +7684,7 @@ All Rights Reserved
     <service name="SforceService">
         <documentation>Sforce SOAP API</documentation>
         <port binding="tns:SoapBinding" name="Soap">
-            <soap:address location="https://login.salesforce.com/services/Soap/c/23.0/0DFD0000000U27E"/>
+            <soap:address location="https://login.salesforce.com/services/Soap/c/23.0/0DFD0000000U2Jj"/>
         </port>
     </service>
 </definitions>
