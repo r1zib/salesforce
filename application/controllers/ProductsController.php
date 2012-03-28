@@ -7,13 +7,26 @@ class ProductsController extends Zend_Controller_Action
     {
         /* Initialize action controller here */
     }
-
+    public function preDispatch() {
+    	// preDispatch est lancé avant chaque action
+    	$auth = Zend_Auth::getInstance();
+    	 
+    	if (!$auth->hasIdentity()) {
+    		$this->_redirect('/index/forbidden');
+    	}
+    	 
+    }
+    
+    
     public function indexAction()
     {
         // Affiche de la liste des produits
         
     	$products = new Application_Model_Products();
+    	
     	$this->view->entries = $products->fetchAll();
+    	
+    	//Zend_Debug::dump($this->view->entries);
     	
     }
 

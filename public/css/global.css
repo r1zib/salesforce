@@ -94,4 +94,11 @@ float : right ;
     border-bottom : 1px solid white;
 }
 
+/* Onglet Contact */
+.spam {
+	background: #ffcc99;
+}
+.new td {
+	font-weight: bold;
+}
 

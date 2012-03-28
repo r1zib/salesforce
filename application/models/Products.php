@@ -2,14 +2,37 @@
 
 class Application_Model_Products
 {
+	/* permet de recherche en base locale ou directement dans salesfores */
+	private $rech_db = true;
+	
 		function __construct() {
 		}
 
 		/*
-		 * Find permet de trouver 1 produit
-		 */
-		
+		* Recherche des information d'une Opportunitée
+		* @param string id
+		* @param string lstCol liste des champs
+		* @return un tableau de la liste des enregistrements
+		*/
 		function find ($id) {
+			$info = array();
+			if ($this->rech_db) {
+				$info = $this->find_db($id);
+			} else {
+				$info = $this->find_salesforce($id);
+			}
+			if (isset($info['UnitPrice'])) {
+				/* Formatage de prix */
+				$prix = $info['UnitPrice'];
+				$info['UnitPrice'] = $this->montant($prix);
+				$info['UnitPrice_ttc'] = $this->montant_ttc($prix);
+			}
+			$info['pdf'] = Zend_Json::prettyPrint(Zend_Json::encode($info));  
+			
+			return $info;
+		}	
+		
+		function find_salesforce ($id) {
 			
 			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
 			$config = Azeliz_Registreconfig::getInstance()->getConfig();
@@ -21,10 +44,53 @@ class Application_Model_Products
 			 
 			return $vue['products'][0];
 		}
+		function find_db ($id) {
+		
+			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
+			$config = Azeliz_Registreconfig::getInstance()->getConfig();
+			$colProduct2 = $config->product->Product2;
+			$colPricebook = 'Name,Description,IsStandard,Id';
+			$colPricebookEntry = 'UnitPrice,Pricebook2Id';
+		
+			/* Recherche du prix standard */
+			$product = new Application_Model_Product2Mapper();
+			$produit = $product->findDetail($id, $colProduct2, $colPricebook, $colPricebookEntry);
+							
+			return $produit;
+		}
+		
+		/*
+		* Recherche des information d'une Opportunitée
+		* @param string id
+		* @param string lstCol liste des champs
+		* @return un tableau de la liste des enregistrements
+		*/
+		function fetchAll ($lstCol='Name,ProductCode,Id', $where ='') {
+			if ($this->rech_db) {
+				return $this->fetchAll_db($lstCol,$where);
+			} else {
+				return $this->fetchAll_salesforce($lstCol,$where);
+			}
+		}
 		
 		
-
-		function fetchAll ($lstCol='Name,ProductCode,Id', $pricebookid= '', $where="") {
+		
+		function fetchAll_db ($lstCol='Name,ProductCode,Id', $where="") {
+		
+			$product = new Application_Model_Product2Mapper();
+            
+            $vue['products'] = $product->fetchAll($lstCol,$where);
+				
+			if (!is_array($vue['products'])) {
+				/* pb de query */
+				echo $vue['products'];
+			}
+			$vue['cols'] = explode(',', $lstCol.',UnitPrice');
+			$vue['tps'] = 0;
+			return $vue;
+		}
+		
+		function fetchAll_salesforce ($lstCol='Name,ProductCode,Id', $where="") {
 
 			$sales = Application_Model_SalesforceConnect::getInstance();
 			$vue = array();
@@ -76,6 +142,16 @@ class Application_Model_Products
 			$vue['cols'] = explode(',', $lstCol.',UnitPrice');
 			return $vue;
 		}
+		/*
+		* Calcul du montant en TTC
+		*/
+		function montant_ttc ($mt, $taxe = 1.196) {
+			return number_format(round(floatval($mt) *1.196,2),2,',','.');
+		}
+		function montant ($mt) {
+			return number_format($mt,2,',','.');
+		}
+		
 
 }
 	

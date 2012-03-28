@@ -7,7 +7,19 @@ class OpportunitiesController extends Zend_Controller_Action
     {
         /* Initialize action controller here */
     }
-
+    
+    public function preDispatch() {
+    	// preDispatch est lancé avant chaque action
+    	$auth = Zend_Auth::getInstance();
+    	 
+    	if (!$auth->hasIdentity()) {
+    		$this->_redirect('/index/forbidden');
+    	}
+    	 
+    }
+    
+    
+    
     public function indexAction()
     {
         // Affiche de la liste des produits
@@ -23,6 +35,8 @@ class OpportunitiesController extends Zend_Controller_Action
     	if ($id > 0) {
     		$opportunities = new Application_Model_Opportunities();
     		$this->view->entries = $opportunities->find($id);
+    		
+    		$this->view->entries['pdf'] = $opportunities->createJson($id);
     	
     	}
     }

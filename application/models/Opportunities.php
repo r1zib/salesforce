@@ -4,6 +4,9 @@ require_once 'ProductSalesforce.php';
 class Application_Model_Opportunities
 {
 	
+	/* permet de recherche en base locale ou directement dans salesfores */
+	private $rech_db = true;
+	
 		function __construct() {
 		}
 		
@@ -151,10 +154,13 @@ class Application_Model_Opportunities
 		*/
 		function createJson ($id) {
 			try {
-				$docx = $this->init_Json();
+				$json = $this->init_Json();
+				/* recherche des informations dans salesforce */
 				$info = $this->find($id);
-				$this->info_generale($info, $docx);
-				$this->info_nke($info, $docx);
+				/* envoi des données de salesforces dans $json */
+				$this->info_generale($info, $json);
+				$this->info_nke($info, $json,"detail");
+				return $json->getInfo();
 			} catch (Exception $e) {
 				$info['log'] = $e->getMessage();
 			}
@@ -193,7 +199,7 @@ class Application_Model_Opportunities
 		* @param $inso array tableau des informations de salesforces
 		* @param Zend_Service_LiveDocx_MailMerge le service pour créer le pdf
 		*/
-		function info_nke ($info,$mailMerge) {
+		function info_nke ($info,$mailMerge,$opt1="ligne") {
 					
 
 		/* la liste des produits ont une destination  :
@@ -228,7 +234,6 @@ class Application_Model_Opportunities
 				
 								
 			}
-
 			foreach($produits as $cle=>$val) {
 				switch ($cle) {
 					case 'std': case 'opt1': case 'opt2' : case 'opt3' :
@@ -236,19 +241,35 @@ class Application_Model_Opportunities
 						foreach ($val as $product) {
 							$lignes[] = $product['Quantity']. ' '.$product['Name'] ;
 						}
-						$mailMerge->assign('products_'.$cle, $lignes);
+						unset($product);
+						if ($opt1=="ligne") {
+							$mailMerge->assign('products_'.$cle, $lignes);
+						} else {
+							$mailMerge->assign('products_'.$cle, $val);
+						}
 						break;
 					case 'c1' : case 'c2' :case 'c3' :
 						$lignes = array();
-						foreach ($val as $product) {
+						foreach ($val as &$product) {
 							$lignes[] = $product['Name'] ;
 							if (isset($product['complement__c'])) {
 								$lignes[] = $product['complement__c'] ;
 							}
-							$lignes[] = $product['UnitPrice'].'€ HT '.$this->montant_ttc($product['UnitPrice']). ' € TTC' ;
+							/* Affichage des montants avec le bon format */
+							$product['UnitPrice_ttc'] = $this->montant_ttc($product['UnitPrice']);
+							$product['UnitPrice'] = $this->montant($product['UnitPrice']);
+							 							
+							$lignes[] = $product['UnitPrice'].'€ HT '.$product['UnitPrice_ttc']. ' € TTC' ;
 							$lignes[] = "";
+							
 						}
-						$mailMerge->assign('products_'.$cle, $lignes);
+						// important sinon cela fait n'importe quoi !!
+						unset($product);
+						if ($opt1 == "ligne") {
+							$mailMerge->assign('products_'.$cle, $lignes);
+						} else {
+							$mailMerge->assign('products_'.$cle, $val);
+						}
 						break;
 				}
 			}
@@ -257,31 +278,48 @@ class Application_Model_Opportunities
 			/* calcul des prix : */
 			if (isset($montant['std'])) {
 				$mt_std = $montant['std'];
-				$mailMerge->assign('products_std_amount', $mt_std);
+				$mailMerge->assign('products_std_amount', $this->montant($mt_std));
 				$mailMerge->assign('products_std_amount_ttc', $this->montant_ttc($mt_std));
 			}
+			
 			foreach($montant as $cle=>$val) {
 				$mt = 0;
 				if ($cle == 'std') continue;
 				if (isset($montant[$cle])) {
 					$mt = $montant[$cle];
 				}
-				$mt += $mt_std;
-				$mailMerge->assign('products_'.$cle.'_amount', $mt);
+				// On ne fait plus le cumul de opt1 et du standard
+				//$mt += $mt_std;
+				$mailMerge->assign('products_'.$cle.'_amount', $this->montant($mt));
 				$mailMerge->assign('products_'.$cle.'_amount_ttc', $this->montant_ttc($mt));
 			}
-			
 			
 		}
 			
 		}		
 		/*
 		* Recherche des information d'une Opportunitée
+		* @param string id
+		* @param string lstCol liste des champs
+		* @return un tableau de la liste des enregistrements
+		*/
+		function find ($id) {
+			if ($this->rech_db) {
+				return $this->find_db($id);
+			} else {
+			    return $this->find_salesforce($id);
+			}
+		}
+		
+		
+		
+		/*
+		* Recherche des information d'une Opportunitée
 		* @param string id 
 		* @param string lstCol liste des champs 
 		* @return un tableau de la liste des enregistrements
 		*/
-		function find ($id) {
+		function find_salesforce ($id) {
 
 			
 			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
@@ -339,16 +377,46 @@ class Application_Model_Opportunities
 			return $vue;
 			
 		}
+		/*
+		* Recherche des information d'une Opportunitée
+		* @param string id
+		* @return un tableau de la liste des enregistrements
+		*/
+		function find_db ($id) {
+			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
+			$config = Azeliz_Registreconfig::getInstance()->getConfig();
 		
+			$lstCol = $config->opportunity->Opportunity;
+			$lstColOpportunityLineItem=$config->opportunity->OpportunityLineItem;
+			$lstColPricebookEntry=$config->opportunity->PricebookEntry;
+			$lstColProduct2=$config->opportunity->Product2;
+				
+			$opportunity = new Application_Model_OpportunityMapper();
+			$result = $opportunity->findDetail($id,
+			$config->opportunity->Opportunity,
+			$config->opportunity->OpportunityLineItem,
+			$config->opportunity->PricebookEntry,
+			$config->opportunity->Product2);
+				
+			return $result;
+		}
 		
-	/*
+		/*
 		 * Recherche la liste des Opportunities
 		 * @param string lstCol liste des champs 
 		 * @param string where Condition dans la recherche
   		 * @return un tableau de la liste des enregistrements
      	 */
-
 		function fetchAll ($lstCol='Name,Id',$where="") {
+			if ($this->rech_db) {
+				return $this->fetchAll_db($lstCol,$where);
+			} else {
+				return $this->fetchAll_salesforce($lstCol,$where);
+			}
+		}
+		
+		
+		function fetchAll_salesforce ($lstCol='Name,Id',$where="") {
 			/* la liste des colonnes provient du fichier de application.ini ou celui du login */
 			$sales = Application_Model_SalesforceConnect::getInstance();
 
@@ -357,11 +425,26 @@ class Application_Model_Opportunities
 			return $vue;
 		}
 		
+		function fetchAll_db ($lstCol='Name,Id',$where="") {
+
+			$opportunity = new Application_Model_OpportunityMapper();
+			
+			$vue['opportunities'] = $opportunity->fetchAll($lstCol, $where);
+			
+			$vue['cols'] = explode(',', $lstCol);
+			return $vue;
+		}
+
+		
+		
 		/*
 		 * Calcul du montant en TTC
 		 */
 		function montant_ttc ($mt, $taxe = 1.196) {
 			return number_format(round(floatval($mt) *1.196,2),2,',','.');
+		}
+		function montant ($mt) {
+			return number_format($mt,2,',','.');
 		}
 		
 

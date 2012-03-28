@@ -49,6 +49,8 @@ class Application_Model_SalesforceConnect {
     		$password = $config->salesforce->password;
     		$token = $config->salesforce->token;
     		$wsdl = $config->salesforce->wsdl;
+    		
+    		Zend_Debug::dump($token);
     			
     		$this->mySforceConnection = new SforceEnterpriseClient();
     		$this->mySforceConnection->createConnection($wsdl);
@@ -90,18 +92,31 @@ class Application_Model_SalesforceConnect {
     * @return un tableau de la liste des enregistrements
     */
     
-    public function query ($table,$cols, $where="") {
+    public function query ($table,$cols, $where="",$option="", &$erreur=null) {
     	try {
+    		$options = new QueryOptions(2000);
+    		$this->mySforceConnection->setQueryOptions($options);
+    		
     		$vue = array();
     		$query = "SELECT ".$cols." from ".$table;
     			
     		if (!empty($where)) {
     			$query .= " Where ".$where;
     		}
+    		if (!empty($option)) {
+    			$query .= " ".$option;
+    		}
+    		Zend_Debug::dump($query);
     		$response = $this->mySforceConnection->query($query);
+    		$this->infoMsg();
     
     		if (!$response->done) {
-    			return 'PB Query <br/>';
+    			// la requete c'est mal passé 
+    			if (isset($erreur)) {
+    				$erreur = 'PB Query <br/>';
+    			}
+    			
+    			//return 'PB Query <br/>';
     		}
     		if (count($response->size > 0)) {
     			foreach ($response->records as $sObject) {

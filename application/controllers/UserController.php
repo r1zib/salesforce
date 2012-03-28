@@ -51,7 +51,9 @@ class UserController extends Zend_Controller_Action
             $form->populate($formData);
         }
     } else {
-    	$form->populate($user->toArray()); 
+    	if ($id > 0) {
+    		$form->populate($user->toArray());
+    	} 
     }
     }
 
