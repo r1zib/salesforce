@@ -1,0 +1,35 @@
+<br /><br />
+<div id="view-content">
+
+<a class = "btn spam" href="<?php 
+	echo $this->url(array('controller'=>'contact',
+                              'action'=>'maj', 
+                              'id'=>$this->entries['id'],
+	                          'trait' => 'spam'));?>">Spam</a>
+<a class = "btn ham" href="<?php 
+	echo $this->url(array('controller'=>'contact',
+                              'action'=>'maj', 
+                              'id'=>$this->entries['id'],
+	                          'trait' => 'ham'));?>">Ham</a>
+<a class = "btn akismet" href="<?php 
+	echo $this->url(array('controller'=>'contact',
+                              'action'=>'maj', 
+                              'id'=>$this->entries['id'],
+	                          'trait' => 'isspam'));?>">Is Spam ? </a>
+
+
+<table>
+<thead>
+<tr><td>Champ</td><td>Valeur</td></tr>
+</thead>
+
+<?php
+foreach ($this->entries as $cle=>$val) {
+	echo '<tr><td>'.$cle.'</td><td>'.$val.'</td></tr>';
+}
+
+?>
+</table>
+	                          
+</div>
+

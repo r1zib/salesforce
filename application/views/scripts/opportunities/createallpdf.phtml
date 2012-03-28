@@ -1,0 +1,20 @@
+<div id="view-content" class= "list">
+
+
+<table> 
+	<thead>
+	<tr>
+		
+		<td>ID</td><td>Name</td><td>pdf</td><td>log</td>
+	</tr>
+	</thead>
+	
+	<?php foreach ($this->entries as $val) :?>
+	
+	<tr>
+	<?php echo'<td>'.@$val['Id'].'</td><td>'.@$val['Name'].'</td><td>'.@$val['pdf'].'</td><td>'.@$val['log'].'</td>';?>			
+	</tr>
+	<?php endforeach;?>
+</table>
+
+</div>

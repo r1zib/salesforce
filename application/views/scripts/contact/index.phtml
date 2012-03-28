@@ -1,0 +1,81 @@
+<div id="view-content" class= "list">
+
+
+<ul>
+<li class="<?php if (!isset($this->sel)) echo 'actif'; ?>">
+<a href="<?php echo $this->url(array('controller'=>'Contact','action'=>'index','sel'=>'')); ?>">Tout</a>
+</li>
+<li class="<?php if (isset($this->sel) && $this->sel == 'new') echo 'actif'; ?>">
+<a href="<?php echo $this->url(array('controller'=>'Contact','action'=>'index','sel'=>'new')); ?>">Non lu</a>
+</li>
+<li class="<?php if (isset($this->sel) && $this->sel == 'spam') echo 'actif'; ?>">
+<a href="<?php echo $this->url(array('controller'=>'Contact','action'=>'index','sel'=>'spam')); ?>">Indésirable </a>
+</li>
+</ul>
+
+<form action='<?php echo $this->url(array('controller'=>'Contact',
+                                        'action'=>'majall')); ?>' 
+               method='post'>
+<table> 
+	<thead>
+	<tr>
+		<td><div class="selected menuButton">
+			<span class="menu"><input type="checkbox" name="selected_id[]" title="" value=""></span>
+			<ul> <li class="all">Tous</li>
+				<li class="none">Aucun</li>
+			</ul>
+			</div>
+			</td>
+	    <td>Nom     .</td>
+	    <td>Email</td>
+	    <td>message</td>
+	    <td>date</td>
+	    <td>Spam</td>
+	     <td></td>
+	</tr>
+	</thead>
+	
+	<?php foreach ($this->entries as $contact) : ?>
+	<tr class="<?php 
+	   $class = $contact['etat'];
+	   if ($contact['spam']) $class .= ' spam';
+	   echo $class; ?>">
+		<td class="select"><input type="checkbox" name="selected_id[]" title="" value="<?php echo $contact['id']; ?>"></td>
+		<td><?php echo $contact['lastname']. ' '. $contact['firstname']; ?></td>
+		<td><?php echo $contact['email']; ?></td>
+		<td><span class="object"><?php $info = Zend_Json::decode($contact['fields']); echo @$info['objet'];?></span>
+		     <span class="message"><?php echo @$info['message'];?></span></td>
+		<td><?php 
+		$date = strtotime($contact['date_create']);
+		$now = time();
+		
+		if (date('d/m/Y',$date) == date('d/m/Y',$now) )
+		  /* Contact de la journée : 9:30 */
+		   echo date('H:i',$date);
+		else if (date('Y',$date) == date('Y',$now) )
+		   /* Contact d'année : 16 Mars */
+			echo date('d F',$date);
+		else 
+		  /* Contact 16/03/12 */
+			echo date('d/m/y',$date);
+		?></td>
+		<td><?php if ($contact['spam']) echo 'spam'; ?></td>
+		<td><a href="<?php 
+	echo $this->url(array('controller'=>'contact',
+                              'action'=>'edit', 
+                              'id'=>$contact['id']));?>">Détail</a></td>
+	</tr>
+	<?php endforeach;?>
+</table>
+<p> <select name="trait">
+    <option value="Pour la sélection :" selected="selected">Pour la sélection :</option>
+    <option value="spam">Signaler comme Spam</option>
+    <option value="ham">Non Spam</option>
+    <option value="read">Marquer comme lu</option>
+    
+    </select>
+    <input type="submit" value="ok"/>
+    </p>
+
+</form>
+</div>
